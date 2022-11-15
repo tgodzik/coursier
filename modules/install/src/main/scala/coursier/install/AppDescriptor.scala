@@ -87,6 +87,9 @@ import dataclass._
     }
   }
 
+  // def repr: String =
+  //   AppDescriptor.encoder.encode(this).nospaces
+
   def mainVersionOpt: Option[String] =
     dependencies.headOption.map(_.version)
 

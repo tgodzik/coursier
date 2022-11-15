@@ -10,6 +10,7 @@ import coursier.cli.channel.Channel
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.install.AppDescriptor
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
@@ -18,7 +19,6 @@ import coursier.util.Sync
 
 import scala.concurrent.duration.Duration
 import scala.util.Properties
-
 object Install extends CoursierCommand[InstallOptions] {
 
   override def group: String = CommandGroup.install
@@ -120,9 +120,8 @@ object Install extends CoursierCommand[InstallOptions] {
             case Left(err)      => throw err
             case Right(appInfo) => appInfo
           }
-
           val wroteSomethingOpt = installDir.createOrUpdate(
-            appInfo,
+            appInfo.withRepositories(params.repository.repositories),
             Instant.now(),
             force = params.force
           )

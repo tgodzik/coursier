@@ -1,6 +1,9 @@
 package coursier.install
 
+import coursier.core.Repository
 import dataclass.data
+
+import java.nio.charset.StandardCharsets
 
 @data class AppInfo(
   appDescriptor: AppDescriptor,
@@ -14,4 +17,12 @@ import dataclass.data
       .withOverrideVersionOpt(Some(version))
   def overrideVersion(versionOpt: Option[String]): AppInfo =
     versionOpt.fold(this)(overrideVersion(_))
+  def withRepositories(repositories: Seq[Repository]): AppInfo = {
+    val appDescWithRepositories =
+      this.appDescriptor.withRepositories(repositories)
+
+    this.withAppDescriptor(
+      appDescWithRepositories
+    )
+  }
 }

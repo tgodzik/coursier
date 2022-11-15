@@ -59,7 +59,8 @@ object Update extends CoursierCommand[UpdateOptions] {
             .find(source.id)
             .map(_.map(data => (data.origin, data.data))),
         now,
-        params.force
+        params.force,
+        params.repository.repositories
       ).map {
         case None =>
           if (params.output.verbosity >= 0)

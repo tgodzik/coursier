@@ -422,7 +422,8 @@ import scala.util.Properties
     name: String,
     update: Source => Task[Option[(String, Array[Byte])]],
     currentTime: Instant = Instant.now(),
-    force: Boolean = false
+    force: Boolean = false,
+    repositories: Seq[Repository]
   ): Task[Option[Boolean]] =
     for {
       _ <- Task.delay {
@@ -446,7 +447,8 @@ import scala.util.Properties
       desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
 
       appInfo = {
-        val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
+        val info =
+          AppInfo(desc, descriptorBytes, source, sourceBytes).withRepositories(repositories)
         val foundName = info.appDescriptor.nameOpt
           .getOrElse(info.source.id)
         if (foundName == name)

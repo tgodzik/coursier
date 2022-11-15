@@ -317,6 +317,48 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_84")
     }
 
+    test("generate launcher from repos") - {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id = "almond"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("sh.almond:::scala-kernel:0.13.1"))
+            .withRepositories(List("central"))
+            .withShared(List("sh.almond:::scala-kernel-api"))
+            .withLauncherType("standalone"),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/ResourcesLauncher.class")
+        assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/almond-0.13.1.jar")
+        val bootResources =
+          stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-resources")
+            .split('\n')
+            .filter(_.nonEmpty)
+            .toSeq
+        val expectedBootResources = Seq("almond-0.13.1.jar")
+        assert(bootResources == expectedBootResources)
+
+        if (currentOs == os) {
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "alm", "-r", "jitpack")
+          val expectedOutput = "alm"
+          assert(output == expectedOutput)
+        }
+      }
+
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
+    }
+
     test("not update an already up-to-date launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -412,7 +454,8 @@ object InstallTests extends TestSuite {
                 Task.point(Some(("inline", newAppInfo.appDescriptorBytes)))
               else
                 Task.fail(new Exception(s"Invalid source: $src")),
-            currentTime = now
+            currentTime = now,
+            repositories = Nil
           ).unsafeRun()(cache.ec)
         }
 
